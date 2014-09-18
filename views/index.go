@@ -28,21 +28,24 @@ const index = `
           float: right;
       }
 
-      #bookmarklet {
-        padding: 3px;
-        display: inline-block;
-        border: 1px solid black;
+      hr {
+        border: none;
+        border-bottom: 1px solid silver;
+        margin: 1em 0;
       }
     </style>
   </head>
   <body>
     <h1>Riviera Admin</h1>
-    <a id="bookmarklet" href="javascript:location.href='http://localhost:8081/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">bookmarklet</a>
+    <a href="javascript:location.href='http://localhost:8081/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">Bookmarklet</a>
+    <a href="/sign-out">Sign-out</a>
+    <hr/>
 
     <form action="/subscribe" method="GET">
       <input type="text" id="url" name="url" />
       <input type="submit" value="Subscribe" />
     </form>
+    <hr/>
 
     <ul>
       {{range .}}

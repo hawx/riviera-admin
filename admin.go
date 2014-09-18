@@ -18,9 +18,11 @@ const HELP = `Usage: riviera-admin [options]
 
     --port <num>       # Port to bind to (default: 8081)
     --riviera <url>    # Url to riviera (default: http://localhost:8080/)
-    --audience <host>  # Host site is running under (default: localhost)
+
+    --audience <host>  # Domain site is running under (default: localhost)
     --user <email>     # User who can access the admin panel
     --secret <str>     # String to use as cookie secret
+
     --help             # Display help message
 `
 
