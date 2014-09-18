@@ -52,8 +52,8 @@ const login = `
       <a id="browserid" href="#" title="Sign-in with Persona">Sign-in</a>
     </div>
 
-    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
-    <script src="https://login.persona.org/include.js"></script>
+    <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="//login.persona.org/include.js"></script>
     <script>
       function gotAssertion(assertion) {
           // got an assertion, now send it up to the server for verification
