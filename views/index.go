@@ -19,42 +19,52 @@ const index = `
           margin: 0 auto;
       }
 
-      ul {
-          list-style: none;
-          padding: 0;
+      header {
+        margin: 2em 0;
       }
 
-      ul li a {
-          float: right;
+      header a {
+        float: right;
+        margin-left: 1em;
       }
 
-      hr {
-        border: none;
-        border-bottom: 1px solid silver;
-        margin: 1em 0;
+      header h1 {
+        font-size: 23px;
+      }
+
+      form {
+        margin-bottom: 2em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      tr {
+        border-bottom: 5px solid transparent;
+      }
+
+      td:last-child {
+        text-align: right;
       }
     </style>
   </head>
   <body>
-    <h1>Riviera Admin</h1>
-    <a href="javascript:location.href='http://localhost:8081/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">Bookmarklet</a>
-    <a href="/sign-out">Sign-out</a>
-    <hr/>
+    <header>
+      <a href="/sign-out">Sign-out</a>
+      <a href="javascript:location.href='http://localhost:8081/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">Bookmarklet</a>
+      <h1>Riviera Admin</h1>
+    </header>
 
-    <form action="/subscribe" method="GET">
-      <input type="text" id="url" name="url" />
-      <input type="submit" value="Subscribe" />
-    </form>
-    <hr/>
-
-    <ul>
+    <table>
       {{range .}}
-        <li>
-          <strong>{{.}}</strong>
-          <a href="/unsubscribe?url={{.}}">unsubscribe</a>
-        </li>
+        <tr>
+          <td>{{.}}</td>
+          <td><a href="/unsubscribe?url={{.}}">unsubscribe</a></td>
+        </tr>
       {{end}}
-    </ul>
+    </table>
   </body>
 </html>
 `
