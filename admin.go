@@ -1,15 +1,19 @@
 package main
 
 import (
+	"github.com/gorilla/context"
+	"github.com/hawx/riviera-admin/actions"
+	"github.com/hawx/riviera-admin/views"
+	"github.com/hawx/wwwhat/persona"
+
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gorilla/context"
-	"github.com/hawx/riviera-admin/views"
-	"github.com/hawx/wwwhat/persona"
-	"github.com/hawx/riviera-admin/actions"
 	"log"
+	"net"
 	"net/http"
+	"os"
+	"os/signal"
 )
 
 const HELP = `Usage: riviera-admin [options]
@@ -17,6 +21,7 @@ const HELP = `Usage: riviera-admin [options]
   An admin panel for riviera
 
     --port <num>       # Port to bind to (default: 8081)
+    --socket <path>    # Serve using a unix socket instead
     --riviera <url>    # Url to riviera (default: http://localhost:8080/)
 
     --audience <host>  # Domain site is running under (default: localhost)
@@ -28,10 +33,13 @@ const HELP = `Usage: riviera-admin [options]
 
 var (
 	port     = flag.String("port", "8081", "")
+	socket   = flag.String("socket", "", "")
 	riviera  = flag.String("riviera", "http://localhost:8080/", "")
+
 	audience = flag.String("audience", "localhost", "")
 	user     = flag.String("user", "", "")
 	secret   = flag.String("secret", "some-secret", "")
+
 	help     = flag.Bool("help", false, "")
 )
 
@@ -101,6 +109,27 @@ func main() {
 	http.Handle("/sign-in", persona.SignIn(store, *audience))
 	http.Handle("/sign-out", persona.SignOut(store))
 
-	log.Println("listening on port :" + *port)
-	log.Fatal(http.ListenAndServe(":"+*port, context.ClearHandler(http.DefaultServeMux)))
+	if *socket == "" {
+		log.Println("listening on port :" + *port)
+		log.Fatal(http.ListenAndServe(":"+*port, context.ClearHandler(http.DefaultServeMux)))
+
+	} else {
+		l, err := net.Listen("unix", *socket)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer l.Close()
+
+		go func() {
+			log.Println("listening on", *socket)
+			log.Fatal(http.Serve(l, context.ClearHandler(http.DefaultServeMux)))
+		}()
+
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, os.Kill)
+
+		s := <-c
+		log.Printf("caught %s: shutting down", s)
+	}
 }
