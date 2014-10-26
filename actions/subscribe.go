@@ -65,6 +65,9 @@ func getFeed(page string) (string, error) {
 }
 
 func isFeedType(contentType string) bool {
-	return contentType == "application/rss+xml" ||
-		contentType == "application/atom+xml"
+	switch contentType {
+		case "application/rss+xml", "application/atom+xml", "application/xml", "text/xml":
+			return true
+	}
+	return false
 }
