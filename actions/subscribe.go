@@ -2,10 +2,12 @@ package actions
 
 import (
 	"github.com/PuerkitoBio/goquery"
+
+	"errors"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
-	"errors"
 )
 
 func Subscribe(riviera, page string) error {
@@ -64,10 +66,19 @@ func getFeed(page string) (string, error) {
 	return "", errors.New("no feed found on page")
 }
 
+var contentTypes = []*regexp.Regexp{
+	regexp.MustCompile("^application/rss\\+xml"),
+	regexp.MustCompile("^application/atom\\+xml"),
+	regexp.MustCompile("^application/xml"),
+	regexp.MustCompile("^text/xml"),
+}
+
 func isFeedType(contentType string) bool {
-	switch contentType {
-		case "application/rss+xml", "application/atom+xml", "application/xml", "text/xml":
+	for _, pat := range contentTypes {
+		if pat.Match([]byte(contentType)) {
 			return true
+		}
 	}
+
 	return false
 }
