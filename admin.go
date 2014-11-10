@@ -5,16 +5,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hawx/riviera-admin/actions"
 	"github.com/hawx/riviera-admin/views"
-	"github.com/hawx/alexandria/web/persona"
+	"github.com/hawx/persona"
+	"github.com/hawx/serve"
 
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
-	"os"
-	"os/signal"
 )
 
 const HELP = `Usage: riviera-admin [options]
@@ -113,30 +111,5 @@ func main() {
 
 	http.Handle("/", r)
 
-	handler := context.ClearHandler(http.DefaultServeMux)
-	if *socket == "" {
-		go func() {
-			log.Println("listening on port :" + *port)
-			log.Fatal(http.ListenAndServe(":"+*port, handler))
-		}()
-
-	} else {
-		l, err := net.Listen("unix", *socket)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		defer l.Close()
-
-		go func() {
-			log.Println("listening on", *socket)
-			log.Fatal(http.Serve(l, handler))
-		}()
-	}
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
-
-	s := <-c
-	log.Printf("caught %s: shutting down", s)
+	serve.Serve(*port, *socket, context.ClearHandler(http.DefaultServeMux))
 }
