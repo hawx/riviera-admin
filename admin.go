@@ -113,10 +113,11 @@ func main() {
 
 	http.Handle("/", r)
 
+	handler := context.ClearHandler(http.DefaultServeMux)
 	if *socket == "" {
 		go func() {
 			log.Println("listening on port :" + *port)
-			log.Fatal(http.ListenAndServe(":"+*port, context.ClearHandler(http.DefaultServeMux)))
+			log.Fatal(http.ListenAndServe(":"+*port, handler))
 		}()
 
 	} else {
@@ -129,7 +130,7 @@ func main() {
 
 		go func() {
 			log.Println("listening on", *socket)
-			log.Fatal(http.Serve(l, context.ClearHandler(http.DefaultServeMux)))
+			log.Fatal(http.Serve(l, handler))
 		}()
 	}
 
