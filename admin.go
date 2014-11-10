@@ -2,9 +2,10 @@ package main
 
 import (
 	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
 	"github.com/hawx/riviera-admin/actions"
 	"github.com/hawx/riviera-admin/views"
-	"github.com/hawx/wwwhat/persona"
+	"github.com/hawx/alexandria/web/persona"
 
 	"encoding/json"
 	"flag"
@@ -100,14 +101,17 @@ func main() {
 	}
 
 	store := persona.NewStore(*secret)
-	protect := persona.Protector(store, []string{*user})
-	cond := persona.Conditional(store, []string{*user})
+	persona := persona.New(store, *audience, []string{*user})
 
-	http.Handle("/", cond(List, Login))
-	http.Handle("/subscribe", protect(Subscribe))
-	http.Handle("/unsubscribe", protect(Unsubscribe))
-	http.Handle("/sign-in", persona.SignIn(store, *audience))
-	http.Handle("/sign-out", persona.SignOut(store))
+	r := mux.NewRouter()
+
+	r.Methods("GET").Path("/").Handler(persona.Switch(List, Login))
+	r.Methods("GET").Path("/subscribe").Handler(persona.Protect(Subscribe))
+	r.Methods("GET").Path("/unsubscribe").Handler(persona.Protect(Unsubscribe))
+	r.Methods("POST").Path("/sign-in").Handler(persona.SignIn)
+	r.Methods("GET").Path("/sign-out").Handler(persona.SignOut)
+
+	http.Handle("/", r)
 
 	if *socket == "" {
 		log.Println("listening on port :" + *port)
