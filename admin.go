@@ -114,8 +114,10 @@ func main() {
 	http.Handle("/", r)
 
 	if *socket == "" {
-		log.Println("listening on port :" + *port)
-		log.Fatal(http.ListenAndServe(":"+*port, context.ClearHandler(http.DefaultServeMux)))
+		go func() {
+			log.Println("listening on port :" + *port)
+			log.Fatal(http.ListenAndServe(":"+*port, context.ClearHandler(http.DefaultServeMux)))
+		}()
 
 	} else {
 		l, err := net.Listen("unix", *socket)
@@ -129,11 +131,11 @@ func main() {
 			log.Println("listening on", *socket)
 			log.Fatal(http.Serve(l, context.ClearHandler(http.DefaultServeMux)))
 		}()
-
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt, os.Kill)
-
-		s := <-c
-		log.Printf("caught %s: shutting down", s)
 	}
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+
+	s := <-c
+	log.Printf("caught %s: shutting down", s)
 }
