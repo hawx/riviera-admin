@@ -91,7 +91,7 @@ var Subscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, *pathPrefix + "/", 301)
 })
 
 var Unsubscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +101,7 @@ var Unsubscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, *pathPrefix + "/", 301)
 })
 
 func main() {
