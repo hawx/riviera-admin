@@ -42,6 +42,13 @@ var (
 	help       = flag.Bool("help", false, "")
 )
 
+func Log(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
+}
+
 var Login = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	views.Login.Execute(w, struct{
@@ -118,5 +125,5 @@ func main() {
 
 	http.Handle("/", r)
 
-	serve.Serve(*port, *socket, context.ClearHandler(http.DefaultServeMux))
+	serve.Serve(*port, *socket, context.ClearHandler(Log(http.DefaultServeMux)))
 }
