@@ -60,7 +60,7 @@ const login = `
           if (assertion !== null) {
               $.ajax({
                   type: 'POST',
-                  url: '/sign-in',
+                  url: '{{.PathPrefix}}/sign-in',
                   data: { assertion: assertion },
                   success: function(res, status, xhr) {
                       window.location.reload();

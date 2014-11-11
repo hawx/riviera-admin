@@ -52,16 +52,16 @@ const index = `
   </head>
   <body>
     <header>
-      <a href="/sign-out">Sign-out</a>
-      <a href="javascript:location.href='http://localhost:8081/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">Bookmarklet</a>
+      <a href="{{.PathPrefix}}/sign-out">Sign-out</a>
+      <a href="javascript:location.href='{{.Url}}{{.PathPrefix}}/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">Bookmarklet</a>
       <h1>Riviera Admin</h1>
     </header>
 
     <table>
-      {{range .}}
+      {{range .Feeds}}
         <tr>
           <td>{{.}}</td>
-          <td><a href="/unsubscribe?url={{.}}">unsubscribe</a></td>
+          <td><a href="{{$.PathPrefix}}/unsubscribe?url={{.}}">unsubscribe</a></td>
         </tr>
       {{end}}
     </table>

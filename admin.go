@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	"github.com/hawx/persona"
 	"github.com/hawx/riviera-admin/actions"
 	"github.com/hawx/riviera-admin/views"
-	"github.com/hawx/persona"
 	"github.com/hawx/serve"
 
 	"encoding/json"
@@ -19,32 +19,34 @@ const HELP = `Usage: riviera-admin [options]
 
   An admin panel for riviera
 
-    --port <num>       # Port to bind to (default: 8081)
-    --socket <path>    # Serve using a unix socket instead
-    --riviera <url>    # Url to riviera (default: http://localhost:8080/)
+    --port <num>        # Port to bind to (default: 8081)
+    --socket <path>     # Serve using a unix socket instead
+    --riviera <url>     # Url to riviera (default: http://localhost:8080/)
 
-    --audience <host>  # Domain site is running under (default: localhost)
-    --user <email>     # User who can access the admin panel
-    --secret <str>     # String to use as cookie secret
+    --audience <host>   # Host and port site is running under (default: http://localhost:8081)
+    --user <email>      # User who can access the admin panel
+    --secret <str>      # String to use as cookie secret
+    --path-prefix <p>   # Path prefix serving on
 
-    --help             # Display help message
+    --help              # Display help message
 `
 
 var (
-	port     = flag.String("port", "8081", "")
-	socket   = flag.String("socket", "", "")
-	riviera  = flag.String("riviera", "http://localhost:8080/", "")
-
-	audience = flag.String("audience", "localhost", "")
-	user     = flag.String("user", "", "")
-	secret   = flag.String("secret", "some-secret", "")
-
-	help     = flag.Bool("help", false, "")
+	port       = flag.String("port", "8081", "")
+	socket     = flag.String("socket", "", "")
+	riviera    = flag.String("riviera", "http://localhost:8080/", "")
+	audience   = flag.String("audience", "http://localhost:8081", "")
+	user       = flag.String("user", "", "")
+	secret     = flag.String("secret", "some-secret", "")
+	pathPrefix = flag.String("path-prefix", "", "")
+	help       = flag.Bool("help", false, "")
 )
 
 var Login = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
-	views.Login.Execute(w, struct{}{})
+	views.Login.Execute(w, struct{
+		PathPrefix string
+	}{*pathPrefix})
 })
 
 var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +61,12 @@ var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(resp.Body).Decode(&list)
 
 	w.Header().Add("Content-Type", "text/html")
-	views.Index.Execute(w, list)
+
+	views.Index.Execute(w, struct {
+		Url string
+		PathPrefix string
+		Feeds []string
+	}{*audience, *pathPrefix, list})
 })
 
 var Subscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
