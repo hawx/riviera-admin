@@ -56,6 +56,13 @@ var Login = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	}{*pathPrefix})
 })
 
+type Feed struct {
+	FeedUrl string
+	WebsiteUrl string
+	FeedTitle string
+	FeedDescription string
+}
+
 var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(*riviera + "-/list")
 	if err != nil {
@@ -64,15 +71,20 @@ var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var list []string
-	json.NewDecoder(resp.Body).Decode(&list)
+	var list []Feed
+	err = json.NewDecoder(resp.Body).Decode(&list)
+	if err != nil {
+		log.Println("list", err)
+		w.WriteHeader(500)
+		return
+	}
 
 	w.Header().Add("Content-Type", "text/html")
 
 	views.Index.Execute(w, struct {
 		Url string
 		PathPrefix string
-		Feeds []string
+		Feeds []Feed
 	}{*audience, *pathPrefix, list})
 })
 
