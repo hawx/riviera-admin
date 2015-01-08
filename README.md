@@ -7,13 +7,6 @@ An admin panel for [riviera][].
 - Can unsubscribe from existing feeds
 - Provides a bookmarklet to subscribe to the current page's feed
 
-
-``` bash
-$ go get github.com/hawx/riviera
-$ riviera --opml subscriptions.xml
-...
-```
-
 ``` bash
 $ go get github.com/hawx/riviera-admin
 $ riviera-admin --user john@doe.com
