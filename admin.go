@@ -61,6 +61,7 @@ type Feed struct {
 	WebsiteUrl string
 	FeedTitle string
 	FeedDescription string
+	Status string
 }
 
 var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

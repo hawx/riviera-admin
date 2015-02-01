@@ -121,13 +121,17 @@ const index = `
 
       .actions {
           display: flex;
-          justify-content: flex-end;
+          justify-content: space-between;
           margin: 1em 0;
       }
 
       .action, .action:hover {
           color: #A97612;
       }
+
+      .status-Good { color: #75B41C; opacity: 0; }
+      .status-Bad  { color: #a92b12; }
+      .status-Gone { color: #383159; }
 
       .filter {
           padding: 1em 0px;
@@ -170,6 +174,7 @@ const index = `
           <h3>&rarr; <a href="{{.WebsiteUrl}}">{{.WebsiteUrl}}</a></h3>
           <p>{{.FeedDescription}}</p>
           <div class="actions">
+            <span class="status-{{.Status}}">{{.Status}}</span>
             <a class="action" href="{{$.PathPrefix}}/unsubscribe?url={{.FeedUrl}}">unsubscribe</a>
           </div>
         </li>
