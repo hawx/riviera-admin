@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
-	"github.com/hawx/persona"
-	"github.com/hawx/riviera-admin/actions"
-	"github.com/hawx/riviera-admin/views"
-	"github.com/hawx/serve"
-
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/hawx/mux"
+	"github.com/hawx/persona"
+	"github.com/hawx/serve"
+
+	"github.com/hawx/riviera-admin/actions"
+	"github.com/hawx/riviera-admin/views"
 )
 
 const HELP = `Usage: riviera-admin [options]
@@ -51,17 +51,17 @@ func Log(handler http.Handler) http.Handler {
 
 var Login = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
-	views.Login.Execute(w, struct{
+	views.Login.Execute(w, struct {
 		PathPrefix string
 	}{*pathPrefix})
 })
 
 type Feed struct {
-	FeedUrl string
-	WebsiteUrl string
-	FeedTitle string
+	FeedUrl         string
+	WebsiteUrl      string
+	FeedTitle       string
 	FeedDescription string
-	Status string
+	Status          string
 }
 
 var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,9 +83,9 @@ var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 
 	views.Index.Execute(w, struct {
-		Url string
+		Url        string
 		PathPrefix string
-		Feeds []Feed
+		Feeds      []Feed
 	}{*audience, *pathPrefix, list})
 })
 
@@ -104,7 +104,7 @@ var Subscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, *pathPrefix + "/", 301)
+	http.Redirect(w, r, *pathPrefix+"/", 301)
 })
 
 var Unsubscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +114,7 @@ var Unsubscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	http.Redirect(w, r, *pathPrefix + "/", 301)
+	http.Redirect(w, r, *pathPrefix+"/", 301)
 })
 
 func main() {
@@ -128,15 +128,11 @@ func main() {
 	store := persona.NewStore(*secret)
 	persona := persona.New(store, *audience, []string{*user})
 
-	r := mux.NewRouter()
+	http.Handle("/", mux.Method{"GET": persona.Switch(List, Login)})
+	http.Handle("/subscribe", persona.Protect(mux.Method{"GET": Subscribe}))
+	http.Handle("/unsubscribe", persona.Protect(mux.Method{"GET": Unsubscribe}))
+	http.Handle("/sign-in", mux.Method{"POST": persona.SignIn})
+	http.Handle("/sign-out", mux.Method{"GET": persona.SignOut})
 
-	r.Methods("GET").Path("/").Handler(persona.Switch(List, Login))
-	r.Methods("GET").Path("/subscribe").Handler(persona.Protect(Subscribe))
-	r.Methods("GET").Path("/unsubscribe").Handler(persona.Protect(Unsubscribe))
-	r.Methods("POST").Path("/sign-in").Handler(persona.SignIn)
-	r.Methods("GET").Path("/sign-out").Handler(persona.SignOut)
-
-	http.Handle("/", r)
-
-	serve.Serve(*port, *socket, context.ClearHandler(Log(http.DefaultServeMux)))
+	serve.Serve(*port, *socket, Log(http.DefaultServeMux))
 }
