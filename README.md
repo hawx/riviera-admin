@@ -8,7 +8,7 @@ An admin panel for [riviera][].
 - Provides a bookmarklet to subscribe to the current page's feed
 
 ``` bash
-$ go get github.com/hawx/riviera-admin
+$ go get hawx.me/code/riviera-admin
 $ riviera-admin --user john@doe.com
 ...
 ```

@@ -11,8 +11,8 @@ import (
 	"github.com/hawx/serve"
 	"hawx.me/code/mux"
 
-	"github.com/hawx/riviera-admin/actions"
-	"github.com/hawx/riviera-admin/views"
+	"hawx.me/code/riviera-admin/actions"
+	"hawx.me/code/riviera-admin/views"
 )
 
 const HELP = `Usage: riviera-admin [options]
