@@ -7,9 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hawx/persona"
-	"github.com/hawx/serve"
 	"hawx.me/code/mux"
+	"hawx.me/code/persona"
+	"hawx.me/code/serve"
 
 	"hawx.me/code/riviera-admin/actions"
 	"hawx.me/code/riviera-admin/views"
