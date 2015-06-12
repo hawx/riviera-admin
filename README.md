@@ -3,13 +3,12 @@
 An admin panel for [riviera][].
 
 - Lists feeds subscribed to
-- Can subscribe to new feeds
-- Can unsubscribe from existing feeds
 - Provides a bookmarklet to subscribe to the current page's feed
+- Can unsubscribe from existing feeds
 
 ``` bash
 $ go get hawx.me/code/riviera-admin
-$ riviera-admin --user john@doe.com
+$ riviera-admin --user john@doe.com subscriptions.xml
 ...
 ```
 
