@@ -1,23 +1,40 @@
 package actions
 
 import (
-	"github.com/PuerkitoBio/goquery"
-
 	"errors"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
+	"hawx.me/code/riviera/subscriptions/opml"
 )
 
-func Subscribe(riviera, page string) error {
+func Subscribe(opmlPath, page string) error {
 	feed, err := getFeed(page)
 	if err != nil {
 		return err
 	}
 
-	_, err = http.PostForm(riviera+"-/subscribe", url.Values{"url": []string{feed}})
-	return err
+	outline, err := opml.Load(opmlPath)
+	if err != nil {
+		return err
+	}
+
+	outline.Body.Outline = append(outline.Body.Outline, opml.Outline{
+		Type:   "rss",
+		XmlUrl: feed,
+	})
+
+	file, err := os.OpenFile(opmlPath, os.O_WRONLY|os.O_TRUNC, 0)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return outline.WriteTo(file)
 }
 
 func getFeed(page string) (string, error) {

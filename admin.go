@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -9,15 +8,13 @@ import (
 
 	"hawx.me/code/mux"
 	"hawx.me/code/persona"
+	"hawx.me/code/riviera-admin/handlers"
 	"hawx.me/code/serve"
-
-	"hawx.me/code/riviera-admin/actions"
-	"hawx.me/code/riviera-admin/views"
 )
 
-const HELP = `Usage: riviera-admin [options]
+const HELP = `Usage: riviera-admin [options] FILE
 
-  An admin panel for riviera
+  An admin panel for riviera.
 
     --port <num>        # Port to bind to (default: 8081)
     --socket <path>     # Serve using a unix socket instead
@@ -40,6 +37,8 @@ var (
 	secret     = flag.String("secret", "some-secret", "")
 	pathPrefix = flag.String("path-prefix", "", "")
 	help       = flag.Bool("help", false, "")
+
+	opmlPath string
 )
 
 func Log(handler http.Handler) http.Handler {
@@ -49,90 +48,37 @@ func Log(handler http.Handler) http.Handler {
 	})
 }
 
-var Login = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/html")
-	views.Login.Execute(w, struct {
-		PathPrefix string
-	}{*pathPrefix})
-})
-
-type Feed struct {
-	FeedUrl         string
-	WebsiteUrl      string
-	FeedTitle       string
-	FeedDescription string
-	Status          string
-}
-
-var List = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	resp, err := http.Get(*riviera + "-/list")
-	if err != nil {
-		log.Print("list", err)
-		w.WriteHeader(500)
-		return
-	}
-
-	var list []Feed
-	err = json.NewDecoder(resp.Body).Decode(&list)
-	if err != nil {
-		log.Println("list", err)
-		w.WriteHeader(500)
-		return
-	}
-
-	w.Header().Add("Content-Type", "text/html")
-
-	views.Index.Execute(w, struct {
-		Url        string
-		PathPrefix string
-		Feeds      []Feed
-	}{*audience, *pathPrefix, list})
-})
-
-var Subscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	url := r.FormValue("url")
-
-	err := actions.Subscribe(*riviera, url)
-	if err != nil {
-		log.Println("subscribe:", err)
-		w.WriteHeader(500)
-		return
-	}
-
-	if r.FormValue("redirect") == "origin" {
-		http.Redirect(w, r, url, 301)
-		return
-	}
-
-	http.Redirect(w, r, *pathPrefix+"/", 301)
-})
-
-var Unsubscribe = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	err := actions.Unsubscribe(*riviera, r.FormValue("url"))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	http.Redirect(w, r, *pathPrefix+"/", 301)
-})
-
 func main() {
 	flag.Parse()
 
-	if *help {
+	if *help || flag.NArg() == 0 {
 		fmt.Println(HELP)
 		return
 	}
 
+	opmlPath = flag.Arg(0)
+
 	store := persona.NewStore(*secret)
 	persona := persona.New(store, *audience, []string{*user})
 
-	http.Handle("/", mux.Method{"GET": persona.Switch(List, Login)})
-	http.Handle("/subscribe", persona.Protect(mux.Method{"GET": Subscribe}))
-	http.Handle("/unsubscribe", persona.Protect(mux.Method{"GET": Unsubscribe}))
-	http.Handle("/sign-in", mux.Method{"POST": persona.SignIn})
-	http.Handle("/sign-out", mux.Method{"GET": persona.SignOut})
+	http.Handle("/", mux.Method{
+		"GET": persona.Switch(
+			handlers.List(*riviera, *audience, *pathPrefix),
+			handlers.Login(*pathPrefix),
+		),
+	})
+	http.Handle("/subscribe", persona.Protect(mux.Method{
+		"GET": handlers.Subscribe(opmlPath, *pathPrefix),
+	}))
+	http.Handle("/unsubscribe", persona.Protect(mux.Method{
+		"GET": handlers.Unsubscribe(opmlPath, *pathPrefix),
+	}))
+	http.Handle("/sign-in", mux.Method{
+		"POST": persona.SignIn,
+	})
+	http.Handle("/sign-out", mux.Method{
+		"GET": persona.SignOut,
+	})
 
 	serve.Serve(*port, *socket, Log(http.DefaultServeMux))
 }
