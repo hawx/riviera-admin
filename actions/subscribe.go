@@ -8,12 +8,15 @@ import (
 	"regexp"
 	"strings"
 
+	"code.google.com/p/go-charset/charset"
+	_ "code.google.com/p/go-charset/data"
 	"github.com/PuerkitoBio/goquery"
+	"hawx.me/code/riviera/feed"
 	"hawx.me/code/riviera/subscriptions/opml"
 )
 
 func Subscribe(opmlPath, page string) error {
-	feed, err := getFeed(page)
+	feed, err := findFeed(page)
 	if err != nil {
 		return err
 	}
@@ -23,10 +26,12 @@ func Subscribe(opmlPath, page string) error {
 		return err
 	}
 
-	outline.Body.Outline = append(outline.Body.Outline, opml.Outline{
-		Type:   "rss",
-		XmlUrl: feed,
-	})
+	newfeed, err := getData(feed)
+	if err != nil {
+		return err
+	}
+
+	outline.Body.Outline = append(outline.Body.Outline, newfeed)
 
 	file, err := os.OpenFile(opmlPath, os.O_WRONLY|os.O_TRUNC, 0)
 	if err != nil {
@@ -37,7 +42,40 @@ func Subscribe(opmlPath, page string) error {
 	return outline.WriteTo(file)
 }
 
-func getFeed(page string) (string, error) {
+func getData(feeduri string) (opml.Outline, error) {
+	resp, err := http.Get(feeduri)
+	if err != nil {
+		return opml.Outline{}, err
+	}
+
+	channels, err := feed.Parse(resp.Body, charset.NewReader)
+	resp.Body.Close()
+
+	if err != nil {
+		return opml.Outline{}, err
+	}
+
+	ch := channels[0]
+
+	websiteUrl := ""
+	for _, link := range ch.Links {
+		if link.Rel != "self" {
+			websiteUrl = link.Href
+			break
+		}
+	}
+
+	return opml.Outline{
+		Type:        "rss",
+		Text:        ch.Title,
+		XmlUrl:      feeduri,
+		HtmlUrl:     websiteUrl,
+		Title:       ch.Title,
+		Description: ch.Description,
+	}, nil
+}
+
+func findFeed(page string) (string, error) {
 	resp, err := http.Get(page)
 	if err != nil {
 		return "", err

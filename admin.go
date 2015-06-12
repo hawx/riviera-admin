@@ -18,7 +18,6 @@ const HELP = `Usage: riviera-admin [options] FILE
 
     --port <num>        # Port to bind to (default: 8081)
     --socket <path>     # Serve using a unix socket instead
-    --riviera <url>     # Url to riviera (default: http://localhost:8080/)
 
     --audience <host>   # Host and port site is running under (default: http://localhost:8081)
     --user <email>      # User who can access the admin panel
@@ -31,14 +30,11 @@ const HELP = `Usage: riviera-admin [options] FILE
 var (
 	port       = flag.String("port", "8081", "")
 	socket     = flag.String("socket", "", "")
-	riviera    = flag.String("riviera", "http://localhost:8080/", "")
 	audience   = flag.String("audience", "http://localhost:8081", "")
 	user       = flag.String("user", "", "")
 	secret     = flag.String("secret", "some-secret", "")
 	pathPrefix = flag.String("path-prefix", "", "")
 	help       = flag.Bool("help", false, "")
-
-	opmlPath string
 )
 
 func Log(handler http.Handler) http.Handler {
@@ -56,14 +52,14 @@ func main() {
 		return
 	}
 
-	opmlPath = flag.Arg(0)
+	opmlPath := flag.Arg(0)
 
 	store := persona.NewStore(*secret)
 	persona := persona.New(store, *audience, []string{*user})
 
 	http.Handle("/", mux.Method{
 		"GET": persona.Switch(
-			handlers.List(*riviera, *audience, *pathPrefix),
+			handlers.List(opmlPath, *audience, *pathPrefix),
 			handlers.Login(*pathPrefix),
 		),
 	})
