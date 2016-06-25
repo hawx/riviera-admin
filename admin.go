@@ -6,10 +6,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/BurntSushi/toml"
+
 	"hawx.me/code/mux"
-	"hawx.me/code/persona"
 	"hawx.me/code/riviera-admin/handlers"
 	"hawx.me/code/serve"
+	"hawx.me/code/uberich"
 )
 
 const HELP = `Usage: riviera-admin [options] FILE
@@ -18,24 +20,23 @@ const HELP = `Usage: riviera-admin [options] FILE
 
     --port <num>        # Port to bind to (default: 8081)
     --socket <path>     # Serve using a unix socket instead
-
-    --audience <host>   # Host and port site is running under (default: http://localhost:8081)
-    --user <email>      # User who can access the admin panel
-    --secret <str>      # String to use as cookie secret
-    --path-prefix <p>   # Path prefix serving on
+    --settings <path>   # Path to settings (default: ./settings.toml)
 
     --help              # Display help message
 `
 
-var (
-	port       = flag.String("port", "8081", "")
-	socket     = flag.String("socket", "", "")
-	audience   = flag.String("audience", "http://localhost:8081", "")
-	user       = flag.String("user", "", "")
-	secret     = flag.String("secret", "some-secret", "")
-	pathPrefix = flag.String("path-prefix", "", "")
-	help       = flag.Bool("help", false, "")
-)
+type Conf struct {
+	Secret     string
+	URL        string
+	PathPrefix string
+
+	Uberich struct {
+		AppName    string
+		AppURL     string
+		UberichURL string
+		Secret     string
+	}
+}
 
 func Log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -45,36 +46,47 @@ func Log(handler http.Handler) http.Handler {
 }
 
 func main() {
+	var (
+		settingsPath = flag.String("settings", "./settings.toml", "")
+		port         = flag.String("port", "8081", "")
+		socket       = flag.String("socket", "", "")
+	)
+	flag.Usage = func() { fmt.Println(HELP) }
 	flag.Parse()
 
-	if *help || flag.NArg() == 0 {
+	if flag.NArg() == 0 {
 		fmt.Println(HELP)
 		return
 	}
 
 	opmlPath := flag.Arg(0)
 
-	store := persona.NewStore(*secret)
-	persona := persona.New(store, *audience, []string{*user})
+	var conf *Conf
+	if _, err := toml.DecodeFile(*settingsPath, &conf); err != nil {
+		log.Fatal("toml: ", err)
+	}
+
+	store := uberich.NewStore(conf.Secret)
+	uberich := uberich.NewClient(conf.Uberich.AppName, conf.Uberich.AppURL, conf.Uberich.UberichURL, conf.Uberich.Secret, store)
+
+	shield := func(h http.Handler) http.Handler {
+		return uberich.Protect(h, http.NotFoundHandler())
+	}
 
 	http.Handle("/", mux.Method{
-		"GET": persona.Switch(
-			handlers.List(opmlPath, *audience, *pathPrefix),
-			handlers.Login(*pathPrefix),
+		"GET": uberich.Protect(
+			handlers.List(opmlPath, conf.URL, conf.PathPrefix),
+			handlers.Login(conf.URL, conf.PathPrefix),
 		),
 	})
-	http.Handle("/subscribe", persona.Protect(mux.Method{
-		"GET": handlers.Subscribe(opmlPath, *pathPrefix),
+	http.Handle("/subscribe", shield(mux.Method{
+		"GET": handlers.Subscribe(opmlPath, conf.PathPrefix),
 	}))
-	http.Handle("/unsubscribe", persona.Protect(mux.Method{
-		"GET": handlers.Unsubscribe(opmlPath, *pathPrefix),
+	http.Handle("/unsubscribe", shield(mux.Method{
+		"GET": handlers.Unsubscribe(opmlPath, conf.PathPrefix),
 	}))
-	http.Handle("/sign-in", mux.Method{
-		"POST": persona.SignIn,
-	})
-	http.Handle("/sign-out", mux.Method{
-		"GET": persona.SignOut,
-	})
+	http.Handle("/sign-in", uberich.SignIn("/"))
+	http.Handle("/sign-out", uberich.SignOut("/"))
 
 	serve.Serve(*port, *socket, Log(http.DefaultServeMux))
 }
