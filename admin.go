@@ -85,8 +85,8 @@ func main() {
 	http.Handle("/unsubscribe", shield(mux.Method{
 		"GET": handlers.Unsubscribe(opmlPath, conf.PathPrefix),
 	}))
-	http.Handle("/sign-in", uberich.SignIn("/"))
-	http.Handle("/sign-out", uberich.SignOut("/"))
+	http.Handle("/sign-in", uberich.SignIn(conf.PathPrefix))
+	http.Handle("/sign-out", uberich.SignOut(conf.PathPrefix))
 
 	serve.Serve(*port, *socket, Log(http.DefaultServeMux))
 }
