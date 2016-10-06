@@ -3,6 +3,8 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"sort"
+	"strings"
 
 	"hawx.me/code/riviera-admin/views"
 	"hawx.me/code/riviera/subscriptions/opml"
@@ -26,7 +28,7 @@ func (h *listHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var list []feed
+	var list feeds
 	for _, line := range outline.Body.Outline {
 		if line.Type == "rss" {
 			f := feed{
@@ -44,6 +46,8 @@ func (h *listHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	sort.Sort(list)
+
 	w.Header().Add("Content-Type", "text/html")
 
 	views.Index.Execute(w, struct {
@@ -58,4 +62,12 @@ type feed struct {
 	WebsiteUrl      string
 	FeedTitle       string
 	FeedDescription string
+}
+
+type feeds []feed
+
+func (fs feeds) Len() int      { return len(fs) }
+func (fs feeds) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
+func (fs feeds) Less(i, j int) bool {
+	return strings.ToLower(fs[i].FeedTitle) < strings.ToLower(fs[j].FeedTitle)
 }
