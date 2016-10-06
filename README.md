@@ -8,7 +8,7 @@ An admin panel for [riviera][].
 
 ``` bash
 $ go get hawx.me/code/riviera-admin
-$ riviera-admin --user john@doe.com subscriptions.xml
+$ riviera-admin subscriptions.xml
 ...
 ```
 

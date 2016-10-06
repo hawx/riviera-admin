@@ -14,7 +14,7 @@ import (
 	"hawx.me/code/uberich"
 )
 
-const HELP = `Usage: riviera-admin [options] FILE
+const help = `Usage: riviera-admin [options] FILE
 
   An admin panel for riviera.
 
@@ -51,11 +51,11 @@ func main() {
 		port         = flag.String("port", "8081", "")
 		socket       = flag.String("socket", "", "")
 	)
-	flag.Usage = func() { fmt.Println(HELP) }
+	flag.Usage = func() { fmt.Println(help) }
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fmt.Println(HELP)
+		fmt.Println(help)
 		return
 	}
 
