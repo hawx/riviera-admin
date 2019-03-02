@@ -10,14 +10,13 @@ import (
 	"hawx.me/code/riviera/subscriptions/opml"
 )
 
-func List(opmlPath, url, pathPrefix string) http.Handler {
-	return &listHandler{opmlPath, url, pathPrefix}
+func List(opmlPath, url string) http.Handler {
+	return &listHandler{opmlPath, url}
 }
 
 type listHandler struct {
-	opmlPath   string
-	url        string
-	pathPrefix string
+	opmlPath string
+	url      string
 }
 
 func (h *listHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -51,10 +50,9 @@ func (h *listHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 
 	views.Index.Execute(w, struct {
-		Url        string
-		PathPrefix string
-		Feeds      []feed
-	}{h.url, h.pathPrefix, list})
+		Url   string
+		Feeds []feed
+	}{h.url, list})
 }
 
 type feed struct {

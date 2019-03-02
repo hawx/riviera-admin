@@ -50,7 +50,7 @@ const login = `
   </head>
   <body>
     <div id="cover">
-      <a href="{{.Url}}{{.PathPrefix}}/sign-in" title="Sign-in with Persona">Sign-in</a>
+      <a href="{{.Url}}/sign-in" title="Sign-in">Sign-in</a>
     </div>
   </body>
 </html>

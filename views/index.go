@@ -20,8 +20,8 @@ const index = `
   <body>
     <header>
       <h1>riviera-admin</h1>
-      <a href="javascript:location.href='{{.Url}}{{.PathPrefix}}/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">bookmarklet</a>
-      <a href="{{.PathPrefix}}/sign-out">sign-out</a>
+      <a href="javascript:location.href='{{.Url}}/subscribe?url='+encodeURIComponent(location.href)+'&redirect=origin;'">bookmarklet</a>
+      <a href="{{.Url}}/sign-out">sign-out</a>
     </header>
 
     <div class="container">
@@ -32,7 +32,7 @@ const index = `
           <p>{{.FeedDescription}}</p>
           <div class="buttons">
             <a href="{{.FeedUrl}}">feed</a>
-            <a href="{{$.PathPrefix}}/unsubscribe?url={{.FeedUrl}}">unsubscribe</a>
+            <a href="{{$.Url}}/unsubscribe?url={{.FeedUrl}}">unsubscribe</a>
           </div>
         </li>
         {{end}}

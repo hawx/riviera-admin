@@ -74,8 +74,8 @@ func main() {
 
 	http.Handle("/", mux.Method{
 		"GET": session.Choose(
-			handlers.List(opmlPath, conf.URL, conf.PathPrefix),
-			handlers.Login(conf.URL, conf.PathPrefix),
+			handlers.List(opmlPath, conf.URL),
+			handlers.Login(conf.URL),
 		),
 	})
 	http.Handle("/subscribe", session.Shield(mux.Method{
