@@ -14,7 +14,7 @@ func Unsubscribe(opmlPath, page string) error {
 
 	idx := -1
 	for i, o := range outline.Body.Outline {
-		if o.XmlUrl == page {
+		if o.XMLURL == page {
 			idx = i
 			break
 		}

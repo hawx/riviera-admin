@@ -32,8 +32,8 @@ func (h *listHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, line := range outline.Body.Outline {
 		if line.Type == "rss" {
 			f := feed{
-				FeedUrl:         line.XmlUrl,
-				WebsiteUrl:      line.HtmlUrl,
+				FeedUrl:         line.XMLURL,
+				WebsiteUrl:      line.HTMLURL,
 				FeedTitle:       line.Title,
 				FeedDescription: line.Description,
 			}

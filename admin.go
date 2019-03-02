@@ -8,10 +8,11 @@ import (
 
 	"github.com/BurntSushi/toml"
 
+	"hawx.me/code/indieauth"
+	"hawx.me/code/indieauth/sessions"
 	"hawx.me/code/mux"
 	"hawx.me/code/riviera-admin/handlers"
 	"hawx.me/code/serve"
-	"hawx.me/code/uberich"
 )
 
 const help = `Usage: riviera-admin [options] FILE
@@ -29,13 +30,7 @@ type Conf struct {
 	Secret     string
 	URL        string
 	PathPrefix string
-
-	Uberich struct {
-		AppName    string
-		AppURL     string
-		UberichURL string
-		Secret     string
-	}
+	Me         string
 }
 
 func Log(handler http.Handler) http.Handler {
@@ -66,27 +61,32 @@ func main() {
 		log.Fatal("toml: ", err)
 	}
 
-	store := uberich.NewStore(conf.Secret)
-	uberich := uberich.NewClient(conf.Uberich.AppName, conf.Uberich.AppURL, conf.Uberich.UberichURL, conf.Uberich.Secret, store)
-
-	shield := func(h http.Handler) http.Handler {
-		return uberich.Protect(h, http.NotFoundHandler())
+	auth, err := indieauth.Authentication(conf.URL, conf.URL+"/callback")
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	session, err := sessions.New(conf.Me, conf.Secret, auth)
+	if err != nil {
+		log.Fatal(err)
+	}
+	session.Root = conf.PathPrefix
+
 	http.Handle("/", mux.Method{
-		"GET": uberich.Protect(
+		"GET": session.Choose(
 			handlers.List(opmlPath, conf.URL, conf.PathPrefix),
 			handlers.Login(conf.URL, conf.PathPrefix),
 		),
 	})
-	http.Handle("/subscribe", shield(mux.Method{
+	http.Handle("/subscribe", session.Shield(mux.Method{
 		"GET": handlers.Subscribe(opmlPath, conf.PathPrefix),
 	}))
-	http.Handle("/unsubscribe", shield(mux.Method{
+	http.Handle("/unsubscribe", session.Shield(mux.Method{
 		"GET": handlers.Unsubscribe(opmlPath, conf.PathPrefix),
 	}))
-	http.Handle("/sign-in", uberich.SignIn(conf.PathPrefix))
-	http.Handle("/sign-out", uberich.SignOut(conf.PathPrefix))
+	http.Handle("/sign-in", session.SignIn())
+	http.Handle("/callback", session.Callback())
+	http.Handle("/sign-out", session.SignOut())
 
 	serve.Serve(*port, *socket, Log(http.DefaultServeMux))
 }

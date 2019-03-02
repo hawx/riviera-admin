@@ -8,9 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"code.google.com/p/go-charset/charset"
-	_ "code.google.com/p/go-charset/data"
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/net/html/charset"
 	"hawx.me/code/riviera/feed"
 	"hawx.me/code/riviera/subscriptions/opml"
 )
@@ -48,7 +47,7 @@ func getData(feeduri string) (opml.Outline, error) {
 		return opml.Outline{}, err
 	}
 
-	channels, err := feed.Parse(resp.Body, charset.NewReader)
+	channels, err := feed.Parse(resp.Body, charset.NewReaderLabel)
 	resp.Body.Close()
 
 	if err != nil {
@@ -57,10 +56,10 @@ func getData(feeduri string) (opml.Outline, error) {
 
 	ch := channels[0]
 
-	websiteUrl := ""
+	websiteURL := ""
 	for _, link := range ch.Links {
 		if link.Rel != "self" {
-			websiteUrl = link.Href
+			websiteURL = link.Href
 			break
 		}
 	}
@@ -68,8 +67,8 @@ func getData(feeduri string) (opml.Outline, error) {
 	return opml.Outline{
 		Type:        "rss",
 		Text:        ch.Title,
-		XmlUrl:      feeduri,
-		HtmlUrl:     websiteUrl,
+		XMLURL:      feeduri,
+		HTMLURL:     websiteURL,
 		Title:       ch.Title,
 		Description: ch.Description,
 	}, nil
@@ -112,9 +111,9 @@ func findFeed(page string) (string, error) {
 				}
 				u.Path = href
 				return u.String(), nil
-			} else {
-				return href, nil
 			}
+
+			return href, nil
 		}
 	}
 
